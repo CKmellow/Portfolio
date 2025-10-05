@@ -177,7 +177,7 @@ const Home = () => {
                 <p className="text-base md:text-lg text-gray-400 max-w-xl leading-relaxed font-light"
                   data-aos="fade-up"
                   data-aos-delay="1000">
-                  I’m a Full-Stack Developer passionate about building scalable, user-friendly digital solutions. Skilled in React, Node.js, Python, and cloud technologies, with a growing focus on AI integration.
+                  I’m a Full-Stack Developer passionate about building scalable, user-friendly digital solutions. Skilled in React, Node.js and Python, with a growing focus on AI integration.
                 </p>
 
                 {/* Tech Stack */}

@@ -103,7 +103,18 @@ const AboutPage = ({ totalProjects, totalCertificates }) => {
   }, []);
 
   // Hardcode experience to 3 years
-  const YearExperience = 3;
+  const YearExperience = "";
+
+  // Helper to scroll to Portfolio and set tab
+  const scrollToPortfolioTab = (tabIndex) => {
+    // Set hash for tab (so Portfolio can read it)
+    window.location.hash = `#Portofolio-tab-${tabIndex}`;
+    // Scroll to Portfolio section
+    const section = document.getElementById("Portofolio");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const statsData = useMemo(() => [
     {
@@ -126,7 +137,7 @@ const AboutPage = ({ totalProjects, totalCertificates }) => {
       icon: Globe,
       color: "from-[#6366f1] to-[#a855f7]",
       value: YearExperience,
-      label: "Years of Experience",
+      label: "Experience",
       description: "Continuous learning journey",
       animation: "fade-left",
     },
@@ -155,11 +166,12 @@ const AboutPage = ({ totalProjects, totalCertificates }) => {
               data-aos="fade-right"
               data-aos-duration="1500"
             >
-              A passionate Web & Software Developer with strong foundations in 
-              Networking (CCNA), Cybersecurity, and Cloud Computing. Skilled in 
-              React, Node.js, Python (FastAPI), GraphQL, and modern development 
-              practices, I enjoy transforming ideas into scalable and secure 
-              digital products.
+              I'm a curious and driven Computer Science student at Strathmore University, 
+              passionate about building real-world software solutions that make an impact. 
+              My journey started with a love for problem-solving and has grown into skills 
+              in software development and networking.  
+              I enjoy turning complex ideas into simple, usable, and efficient solutions — 
+              always learning, always improving.
             </p>
 
             {/* Quote Section */}
@@ -174,29 +186,44 @@ const AboutPage = ({ totalProjects, totalCertificates }) => {
             </div>
 
             <div className="flex flex-col lg:flex-row items-center gap-4 w-full">
-              <a href="https://drive.google.com/your-cv-link" className="w-full lg:w-auto">
-                <button className="w-full lg:w-auto sm:px-6 py-2 sm:py-3 rounded-lg bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-medium transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 shadow-lg">
-                  <FileText className="w-5 h-5" /> Download CV
-                </button>
-              </a>
-              <a href="#Portfolio" className="w-full lg:w-auto">
-                <button className="w-full lg:w-auto sm:px-6 py-2 sm:py-3 rounded-lg border border-[#a855f7]/50 text-[#a855f7] font-medium transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 hover:bg-[#a855f7]/10">
-                  <Code className="w-5 h-5" /> View Projects
-                </button>
-              </a>
+              <button
+                onClick={() => {
+                  window.open(
+                    "https://drive.google.com/file/d/1ZHurNrlKog1Hh787OT_ySqZNlbQDC1Fv/view?usp=sharing",
+                    "_blank"
+                  );
+                  setTimeout(() => {
+                    window.location.href =
+                      "https://drive.google.com/uc?export=download&id=1ZHurNrlKog1Hh787OT_ySqZNlbQDC1Fv";
+                  }, 500);
+                }}
+                className="w-full lg:w-auto sm:px-6 py-2 sm:py-3 rounded-lg bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-medium transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
+              >
+                <FileText className="w-5 h-5" /> View & Download CV
+              </button>
+              <button
+                onClick={() => scrollToPortfolioTab(0)}
+                className="w-full lg:w-auto sm:px-6 py-2 sm:py-3 rounded-lg border border-[#a855f7]/50 text-[#a855f7] font-medium transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 hover:bg-[#a855f7]/10"
+              >
+                <Code className="w-5 h-5" /> View Projects
+              </button>
             </div>
           </div>
 
           <ProfileImage />
         </div>
 
-        <a href="#Portfolio">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 cursor-pointer">
-            {statsData.map((stat) => (
-              <StatCard key={stat.label} {...stat} />
-            ))}
-          </div>
-        </a>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 cursor-pointer">
+          {statsData.map((stat, idx) => (
+            <div
+              key={stat.label}
+              onClick={() => scrollToPortfolioTab(idx)}
+              style={{ cursor: "pointer" }}
+            >
+              <StatCard {...stat} />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

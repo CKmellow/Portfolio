@@ -104,18 +104,22 @@ function a11yProps(index) {
 
 // techStacks tetap sama
 const techStacks = [
-  { icon: "html.svg", language: "HTML" },
+  { icon: "Git.png", language: "Git" },
+  { icon: "Github.png", language: "GitHub" },
+  { icon: "Mongo.png", language: "MongoDB" },
+  { icon: "python.png", language: "Python" },
   { icon: "css.svg", language: "CSS" },
   { icon: "javascript.svg", language: "JavaScript" },
   { icon: "tailwind.svg", language: "Tailwind CSS" },
   { icon: "reactjs.svg", language: "ReactJS" },
+  { icon: "vue.png", language: "VueJS" },
   { icon: "vite.svg", language: "Vite" },
   { icon: "nodejs.svg", language: "Node JS" },
   { icon: "bootstrap.svg", language: "Bootstrap" },
-  { icon: "firebase.svg", language: "Firebase" },
-  { icon: "MUI.svg", language: "Material UI" },
+  { icon: "html.svg", language: "HTML" },
+  { icon: "postgresql.png", language: "PostgreSQL" },
+  { icon: "mySQL.png", language: "MySQL" },
   { icon: "vercel.svg", language: "Vercel" },
-  { icon: "SweetAlert.svg", language: "SweetAlert2" },
 ];
 
 export default function FullWidthTabs() {
@@ -143,20 +147,34 @@ export default function FullWidthTabs() {
         supabase.from("certificates").select("*").order('id', { ascending: true }), 
       ]);
 
+      // Debug: Log the raw response from Supabase
+      console.log('Supabase certificatesResponse:', certificatesResponse);
+
       // Error handling untuk setiap request
-      if (projectsResponse.error) throw projectsResponse.error;
-      if (certificatesResponse.error) throw certificatesResponse.error;
+      if (projectsResponse.error) {
+        console.error('Supabase projects error:', projectsResponse.error);
+        throw projectsResponse.error;
+      }
+      if (certificatesResponse.error) {
+        console.error('Supabase certificates error:', certificatesResponse.error);
+        throw certificatesResponse.error;
+      }
 
       // Supabase mengembalikan data dalam properti 'data'
       const projectData = projectsResponse.data || [];
       const certificateData = certificatesResponse.data || [];
 
+      // Debug: Log the actual certificate data array
+      console.log('Supabase certificateData:', certificateData);
+
       setProjects(projectData);
-      setCertificates(certificateData);
+      // Map certificates so that ImgSertif is set for Certificate component
+      const mappedCertificates = certificateData.map(cert => ({ ...cert, ImgSertif: cert.Img }));
+      setCertificates(mappedCertificates);
 
       // Store in localStorage (fungsionalitas ini tetap dipertahankan)
       localStorage.setItem("projects", JSON.stringify(projectData));
-      localStorage.setItem("certificates", JSON.stringify(certificateData));
+      localStorage.setItem("certificates", JSON.stringify(mappedCertificates));
     } catch (error) {
       console.error("Error fetching data from Supabase:", error.message);
     }
@@ -165,16 +183,24 @@ export default function FullWidthTabs() {
 
 
   useEffect(() => {
-    // Coba ambil dari localStorage dulu untuk laod lebih cepat
+    // Try to load from localStorage first for faster load
     const cachedProjects = localStorage.getItem('projects');
     const cachedCertificates = localStorage.getItem('certificates');
 
-    if (cachedProjects && cachedCertificates) {
-        setProjects(JSON.parse(cachedProjects));
-        setCertificates(JSON.parse(cachedCertificates));
+    if (cachedProjects) {
+      setProjects(JSON.parse(cachedProjects));
     }
-    
-    fetchData(); // Tetap panggil fetchData untuk sinkronisasi data terbaru
+    if (cachedCertificates) {
+      // Always map certificates to have ImgSertif for Certificate component, even if localStorage is corrupted
+      let certs = [];
+      try {
+        certs = JSON.parse(cachedCertificates).map(cert => ({ ...cert, ImgSertif: cert.Img }));
+      } catch (e) {
+        certs = [];
+      }
+      setCertificates(certs);
+    }
+    fetchData(); // Always fetch latest from Supabase
   }, [fetchData]);
 
   const handleChange = (event, newValue) => {
@@ -191,6 +217,11 @@ export default function FullWidthTabs() {
 
   const displayedProjects = showAllProjects ? projects : projects.slice(0, initialItems);
   const displayedCertificates = showAllCertificates ? certificates : certificates.slice(0, initialItems);
+
+  // Debug: Log certificates to check what is being rendered
+  useEffect(() => {
+    console.log('Certificates to render:', certificates);
+  }, [certificates]);
 
   // Sisa dari komponen (return statement) tidak ada perubahan
   return (
