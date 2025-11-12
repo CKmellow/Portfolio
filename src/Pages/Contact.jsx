@@ -37,18 +37,12 @@ const ContactPage = () => {
     });
 
     try {
-      const formSubmitUrl = "https://formsubmit.co/kamaucyprian12@gmail.com";
-
-      const submitData = new FormData();
-      submitData.append("name", formData.name);
-      submitData.append("email", formData.email);
-      submitData.append("message", formData.message);
-      submitData.append("_subject", "New Message from Cyprian Kamau Portfolio");
-      submitData.append("_captcha", "false");
-      submitData.append("_template", "table");
-
-      await axios.post(formSubmitUrl, submitData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      // Send to local API route, which uses Nodemailer
+      await axios.post("/api/contact", {
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+        to: "kamaucyprian12@gmail.com", // always send to this address
       });
 
       Swal.fire({
@@ -62,25 +56,12 @@ const ContactPage = () => {
 
       setFormData({ name: "", email: "", message: "" });
     } catch (error) {
-      if (error.request && error.request.status === 0) {
-        Swal.fire({
-          title: "Success!",
-          text: "Your message has been sent successfully!",
-          icon: "success",
-          confirmButtonColor: "#6366f1",
-          timer: 2000,
-          timerProgressBar: true,
-        });
-
-        setFormData({ name: "", email: "", message: "" });
-      } else {
-        Swal.fire({
-          title: "Failed!",
-          text: "Something went wrong. Please try again later.",
-          icon: "error",
-          confirmButtonColor: "#6366f1",
-        });
-      }
+      Swal.fire({
+        title: "Failed!",
+        text: "Something went wrong. Please try again later.",
+        icon: "error",
+        confirmButtonColor: "#6366f1",
+      });
     } finally {
       setIsSubmitting(false);
     }
