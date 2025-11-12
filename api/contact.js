@@ -25,7 +25,8 @@ export default async function handler(req, res) {
              <p><strong>Message:</strong><br/>${message}</p>`,
     });
     res.status(200).json({ success: true });
-  } catch {
-    res.status(500).json({ error: 'Failed to send email.' });
+  } catch (err) {
+    console.error('Nodemailer error:', err);
+    res.status(500).json({ error: 'Failed to send email.', details: err.message || err });
   }
 }
