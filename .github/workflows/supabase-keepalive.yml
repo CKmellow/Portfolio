@@ -1,0 +1,43 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    # Runs daily at 09:00 UTC
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping Supabase REST endpoint
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${SUPABASE_URL:-}" || -z "${SUPABASE_ANON_KEY:-}" ]]; then
+            echo "Missing required secrets: SUPABASE_URL and/or SUPABASE_ANON_KEY"
+            exit 1
+          fi
+
+          PING_URL="${SUPABASE_URL%/}/rest/v1/"
+
+          HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+            --max-time 20 \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "$PING_URL")
+
+          echo "Supabase ping HTTP status: ${HTTP_CODE}"
+
+          # 2xx/3xx/4xx confirms endpoint reachability and activity.
+          if [[ "$HTTP_CODE" =~ ^[234] ]]; then
+            exit 0
+          fi
+
+          echo "Ping failed with unexpected HTTP status: ${HTTP_CODE}"
+          exit 1
