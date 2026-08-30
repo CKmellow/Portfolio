@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import { supabase } from "../supabase"; 
 
@@ -69,6 +69,39 @@ const ToggleButton = ({ onClick, isShowingMore }) => (
   </button>
 );
 
+ToggleButton.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  isShowingMore: PropTypes.bool.isRequired,
+};
+
+const LoadingCards = ({ columns = "projects" }) => {
+  const colClass =
+    columns === "certificates"
+      ? "grid grid-cols-1 md:grid-cols-3 md:gap-5 gap-4 w-full"
+      : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5 w-full";
+
+  return (
+    <div className={colClass}>
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div
+          key={index}
+          className="rounded-xl border border-white/10 bg-white/5 p-4 animate-pulse"
+        >
+          <div className="h-40 w-full rounded-lg bg-white/10" />
+          <div className="mt-4 h-5 w-3/4 rounded bg-white/10" />
+          <div className="mt-3 h-4 w-full rounded bg-white/10" />
+          <div className="mt-2 h-4 w-5/6 rounded bg-white/10" />
+          <div className="mt-5 h-9 w-28 rounded-lg bg-white/10" />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+LoadingCards.propTypes = {
+  columns: PropTypes.oneOf(["projects", "certificates"]),
+};
+
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -126,6 +159,8 @@ export default function FullWidthTabs() {
   const [value, setValue] = useState(0);
   const [projects, setProjects] = useState([]);
   const [certificates, setCertificates] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [loadingCertificates, setLoadingCertificates] = useState(false);
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [showAllCertificates, setShowAllCertificates] = useState(false);
   const isMobile = window.innerWidth < 768;
@@ -139,6 +174,9 @@ export default function FullWidthTabs() {
 
 
   const fetchData = useCallback(async () => {
+    setLoadingProjects(true);
+    setLoadingCertificates(true);
+
     try {
       // Mengambil data dari Supabase secara paralel
       const [projectsResponse, certificatesResponse] = await Promise.all([
@@ -167,15 +205,20 @@ export default function FullWidthTabs() {
       console.log('Supabase certificateData:', certificateData);
 
       setProjects(projectData);
+      setLoadingProjects(false);
       // Map certificates so that ImgSertif is set for Certificate component
       const mappedCertificates = certificateData.map(cert => ({ ...cert, ImgSertif: cert.Img }));
       setCertificates(mappedCertificates);
+      setLoadingCertificates(false);
 
       // Store in localStorage (fungsionalitas ini tetap dipertahankan)
       localStorage.setItem("projects", JSON.stringify(projectData));
       localStorage.setItem("certificates", JSON.stringify(mappedCertificates));
     } catch (error) {
       console.error("Error fetching data from Supabase:", error.message);
+    } finally {
+      setLoadingProjects(false);
+      setLoadingCertificates(false);
     }
   }, []);
 
@@ -194,7 +237,7 @@ export default function FullWidthTabs() {
       let certs = [];
       try {
         certs = JSON.parse(cachedCertificates).map(cert => ({ ...cert, ImgSertif: cert.Img }));
-      } catch (e) {
+      } catch {
         certs = [];
       }
       setCertificates(certs);
@@ -335,25 +378,29 @@ export default function FullWidthTabs() {
         {value === 0 && (
           <TabPanel value={value} index={0} dir={theme.direction}>
             <div className="container mx-auto flex justify-center items-center overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
-                {displayedProjects.map((project, index) => (
-                  <div
-                    key={project.id || index}
-                    data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
-                    data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
-                  >
-                    <CardProject
-                      Img={project.Img}
-                      Title={project.Title}
-                      Description={project.Description}
-                      Link={project.Link}
-                      id={project.id}
-                    />
-                  </div>
-                ))}
-              </div>
+              {loadingProjects && projects.length === 0 ? (
+                <LoadingCards columns="projects" />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
+                  {displayedProjects.map((project, index) => (
+                    <div
+                      key={project.id || index}
+                      data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
+                      data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
+                    >
+                      <CardProject
+                        Img={project.Img}
+                        Title={project.Title}
+                        Description={project.Description}
+                        Link={project.Link}
+                        id={project.id}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            {projects.length > initialItems && (
+            {!loadingProjects && projects.length > initialItems && (
               <div className="mt-6 w-full flex justify-start">
                 <ToggleButton
                   onClick={() => toggleShowMore('projects')}
@@ -366,19 +413,23 @@ export default function FullWidthTabs() {
         {value === 1 && (
           <TabPanel value={value} index={1} dir={theme.direction}>
             <div className="container mx-auto flex justify-center items-center overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-3 md:gap-5 gap-4">
-                {displayedCertificates.map((certificate, index) => (
-                  <div
-                    key={certificate.id || index}
-                    data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
-                    data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
-                  >
-                    <Certificate ImgSertif={certificate.Img} />
-                  </div>
-                ))}
-              </div>
+              {loadingCertificates && certificates.length === 0 ? (
+                <LoadingCards columns="certificates" />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 md:gap-5 gap-4">
+                  {displayedCertificates.map((certificate, index) => (
+                    <div
+                      key={certificate.id || index}
+                      data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
+                      data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
+                    >
+                      <Certificate ImgSertif={certificate.Img} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            {certificates.length > initialItems && (
+            {!loadingCertificates && certificates.length > initialItems && (
               <div className="mt-6 w-full flex justify-start">
                 <ToggleButton
                   onClick={() => toggleShowMore('certificates')}
