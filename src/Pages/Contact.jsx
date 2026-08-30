@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Share2, User, Mail, MessageSquare, Send } from "lucide-react";
 import SocialLinks from "../components/SocialLinks";
 import Swal from "sweetalert2";
@@ -38,12 +38,16 @@ const ContactPage = () => {
 
     try {
       // Send to local API route, which uses Nodemailer
-      await axios.post("/api/contact", {
+      const response = await axios.post("/api/contact", {
         name: formData.name,
         email: formData.email,
         message: formData.message,
         to: "kamaucyprian12@gmail.com", // always send to this address
       });
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.error || "Message sending was not confirmed.");
+      }
 
       Swal.fire({
         title: "Success!",
@@ -56,9 +60,14 @@ const ContactPage = () => {
 
       setFormData({ name: "", email: "", message: "" });
     } catch (error) {
+      const errorMessage =
+        error?.response?.data?.details ||
+        error?.response?.data?.error ||
+        "Something went wrong. Please try again later.";
+
       Swal.fire({
         title: "Failed!",
-        text: "Something went wrong. Please try again later.",
+        text: errorMessage,
         icon: "error",
         confirmButtonColor: "#6366f1",
       });
